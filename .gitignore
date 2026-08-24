@@ -22,3 +22,10 @@ output/*.png
 
 # Jupyter
 .ipynb_checkpoints
+
+# Rice dataset
+Rice_Image_Dataset/
+
+data/raw/
+data/generated
+
