@@ -1,30 +1,44 @@
 import cv2 as cv
-from src.preprocessing import load_image, preprocessing_image
-from src.detection import find_contours, draw_contours
+
+from src.preprocessing import (
+    load_image,
+    preprocessing_image,
+    extract_grain,
+)
 
 
-IMAGE_PATH = "/Users/dhruvsingh/Desktop/open-cv/Rice_Image_Dataset/Arborio/Arborio (1).jpg"
+IMAGE_PATH = (
+    "/Users/dhruvsingh/Desktop/open-cv/"
+    "Rice_Image_Dataset/Arborio/Arborio (1).jpg"
+)
+
 
 def main():
 
+    # Load image
     image = load_image(IMAGE_PATH)
+
+    # Preprocess
     binary = preprocessing_image(image)
 
-    contours = find_contours(binary)
+    # Extract grain
+    grain = extract_grain(
+        image,
+        binary,
+    )
 
-    result = draw_contours(image, contours)
+    if grain is None:
+        print("No grain detected.")
+        return
 
+    # Display results
     cv.imshow("Original", image)
     cv.imshow("Binary", binary)
-
-    print(f"Contours detected : {len(contours)}")
-
-    print(f"Image preprocessed successfully")
-    
-    cv.imshow("Detected contours ", result )
+    cv.imshow("Extracted Grain", grain)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()

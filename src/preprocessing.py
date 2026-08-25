@@ -33,3 +33,41 @@ def preprocessing_image(image: np.ndarray) -> np.ndarray:
     )
 
     return binary
+
+
+def extract_grain(
+        image : np.ndarray,
+        binary : np.ndarray
+,) -> np.ndarray | None:
+    # extracting the largest image from the binary
+    contours, _ = cv.findContours(
+        binary, 
+        cv.RETR_EXTERNAL,
+        cv.CHAIN_APPROX_SIMPLE,
+
+
+    )
+
+    if not contours:
+        return None
+
+    largest_contours = max(
+        contours,
+        key = cv.contourArea,
+    )
+
+    mask = np.zeros_like(binary)
+
+    cv.drawContours(
+        mask,
+        [largest_contours],
+        -1,255, thickness=cv.FILLED
+    )
+
+
+    # extracting the grain
+    grain = cv.bitwise_and(
+        image, image, mask = mask,
+    )
+
+    return grain 
