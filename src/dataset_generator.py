@@ -11,12 +11,12 @@ from src.preprocessing import (
 )
 
 
+# Project directories
 DATASET_DIR = Path("Rice_Image_Dataset")
 OUTPUT_DIR = Path("data/generated")
 
 
 def prepare_grain(image_path: Path) -> np.ndarray | None:
-    # Load and extract a single rice grain
 
     image = load_image(str(image_path))
 
@@ -34,7 +34,6 @@ def create_canvas(
     width: int = 1000,
     height: int = 1000,
 ) -> np.ndarray:
-    # creating the white canvas
 
     return np.ones(
         (height, width, 3),
@@ -46,14 +45,23 @@ def resize_grain(
     grain: np.ndarray,
     max_size: int = 100,
 ) -> np.ndarray:
-    # resizing the grain while maintaing the aspect ratio
 
     height, width = grain.shape[:2]
 
-    scale = max_size / max(height, width)
+    scale = max_size / max(
+        height,
+        width,
+    )
 
-    new_width = max(1, int(width * scale))
-    new_height = max(1, int(height * scale))
+    new_width = max(
+        1,
+        int(width * scale),
+    )
+
+    new_height = max(
+        1,
+        int(height * scale),
+    )
 
     return cv.resize(
         grain,
@@ -67,9 +75,17 @@ def generate_image(
     variety: str = "Arborio",
     image_number: int = 1,
 ) -> Path:
+   
 
+    # Dataset variety directory
     variety_dir = DATASET_DIR / variety
 
+    if not variety_dir.exists():
+        raise FileNotFoundError(
+            f"Rice variety not found: {variety_dir}"
+        )
+
+    # Get dataset images
     image_paths = list(
         variety_dir.glob("*.jpg")
     )
@@ -78,54 +94,112 @@ def generate_image(
         raise ValueError(
             f"Not enough images available. "
             f"Required: {grain_count}, "
-            f"available: {len(image_paths)}"
+            f"Available: {len(image_paths)}"
         )
 
+    # Randomly select individual rice images
     selected_images = random.sample(
         image_paths,
         grain_count,
     )
 
+    # Create canvas
     canvas = create_canvas()
 
     canvas_height, canvas_width = canvas.shape[:2]
 
-    for image_path in selected_images:
+    # Grid configuration
+    columns = 5
+    rows = int(np.ceil(grain_count / columns))
 
-        grain = prepare_grain(image_path)
+    cell_width = canvas_width // columns
+    cell_height = canvas_height // rows
+
+    # Place each grain
+    for index, image_path in enumerate(
+        selected_images
+    ):
+
+        # Extract grain
+        grain = prepare_grain(
+            image_path
+        )
 
         if grain is None:
+            print(
+                f"Warning: Could not extract "
+                f"grain from {image_path}"
+            )
             continue
 
-        grain = resize_grain(grain)
+        # Resize grain
+        grain = resize_grain(
+            grain
+        )
 
-        grain_height, grain_width = grain.shape[:2]
+        grain_height, grain_width = (
+            grain.shape[:2]
+        )
 
-        max_x = canvas_width - grain_width
-        max_y = canvas_height - grain_height
+        # Determine grid position
+        column = index % columns
+        row = index // columns
 
-        x = random.randint(0, max_x)
-        y = random.randint(0, max_y)
+        # Calculate available space
+        cell_x = column * cell_width
+        cell_y = row * cell_height
 
+        # Center grain inside grid cell
+        x = cell_x + (
+            cell_width - grain_width
+        ) // 2
+
+        y = cell_y + (
+            cell_height - grain_height
+        ) // 2
+
+        # Safety check
+        if (
+            x < 0
+            or y < 0
+            or x + grain_width > canvas_width
+            or y + grain_height > canvas_height
+        ):
+            print(
+                f"Warning: Grain {index + 1} "
+                f"does not fit on canvas."
+            )
+            continue
+
+        # Place grain
         canvas[
             y:y + grain_height,
-            x:x + grain_width
+            x:x + grain_width,
         ] = grain
 
+    # Create output directory
     OUTPUT_DIR.mkdir(
         parents=True,
         exist_ok=True,
     )
 
+    # Output path
     output_path = (
         OUTPUT_DIR
         / f"rice_{grain_count}_{image_number}.png"
     )
 
-    cv.imwrite(
+    # Save image
+    success = cv.imwrite(
         str(output_path),
         canvas,
     )
+
+    if not success:
+        raise IOError(
+            f"Failed to save image: "
+            f"{output_path}"
+        )
 
     return output_path
 
@@ -138,4 +212,6 @@ if __name__ == "__main__":
         image_number=1,
     )
 
-    print(f"Generated image: {output}")
+    print(
+        f"Generated image: {output}"
+    )

@@ -5,7 +5,10 @@ from src.preprocessing import (
     preprocessing_image,
 )
 
-from src.counter import count_objects
+from src.counter import (
+    detect_objects,
+    draw_detected_objects,
+)
 
 
 IMAGE_PATH = "data/generated/rice_20_1.png"
@@ -13,20 +16,22 @@ IMAGE_PATH = "data/generated/rice_20_1.png"
 
 def main():
 
-    # Load generated image
     image = load_image(IMAGE_PATH)
 
-    # Preprocess image
     binary = preprocessing_image(image)
 
-    # Count objects
-    count = count_objects(binary)
+    contours = detect_objects(binary)
 
-    print(f"Detected grains: {count}")
+    result = draw_detected_objects(
+        image,
+        contours,
+    )
 
-    # Display images
-    cv.imshow("Image", image)
+    print(f"Detected contours: {len(contours)}")
+
+    cv.imshow("Original", image)
     cv.imshow("Binary", binary)
+    cv.imshow("Detected Objects", result)
 
     cv.waitKey(0)
     cv.destroyAllWindows()

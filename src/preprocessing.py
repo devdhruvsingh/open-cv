@@ -3,7 +3,7 @@ import numpy as np
 
 
 def load_image(image_path: str) -> np.ndarray:
-    """Load an image from disk."""
+    # loading the image
 
     image = cv.imread(image_path)
 
@@ -16,20 +16,29 @@ def load_image(image_path: str) -> np.ndarray:
 
 
 def preprocessing_image(image: np.ndarray) -> np.ndarray:
-    """Convert the image into a binary image."""
+    # image to binary
 
-    # Convert the image into grayscale
-    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    # Convert to grayscale
+    gray = cv.cvtColor(
+        image,
+        cv.COLOR_BGR2GRAY
+    )
 
-    # Reduce small amounts of image noise
-    blurred = cv.GaussianBlur(gray, (5, 5), 0)
+    # Reduce noise
+    blurred = cv.GaussianBlur(
+        gray,
+        (5, 5),
+        0
+    )
 
-    # Convert the image into binary
-    _, binary = cv.threshold(
+    # Adaptive threshold
+    binary = cv.adaptiveThreshold(
         blurred,
-        0,
         255,
-        cv.THRESH_BINARY_INV + cv.THRESH_OTSU
+        cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv.THRESH_BINARY_INV,
+        21,
+        5,
     )
 
     return binary
@@ -56,18 +65,16 @@ def extract_grain(
         key = cv.contourArea,
     )
 
-    mask = np.zeros_like(binary)
+    # get rectangle
+    x, y, width , height = cv.boundingRect(
+        largest_contours
 
-    cv.drawContours(
-        mask,
-        [largest_contours],
-        -1,255, thickness=cv.FILLED
     )
 
+    # crop the original iamge
+    grain = image[
+        y:y + height,
+        x:x + width
+    ]
 
-    # extracting the grain
-    grain = cv.bitwise_and(
-        image, image, mask = mask,
-    )
-
-    return grain 
+    return grain
