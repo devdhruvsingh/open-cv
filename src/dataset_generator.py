@@ -203,10 +203,101 @@ def generate_image(
 
     return output_path
 
+def generate_touching_image(
+    grain_count: int,
+    variety: str = "Arborio",
+    image_number: int = 1,
+) -> Path:
+#    image generation with overlapping grains 
+
+    variety_dir = DATASET_DIR / variety
+
+    image_paths = list(
+        variety_dir.glob("*.jpg")
+    )
+
+    if len(image_paths) < grain_count:
+        raise ValueError(
+            f"Not enough images available."
+        )
+
+    selected_images = random.sample(
+        image_paths,
+        grain_count,
+    )
+
+    canvas = create_canvas(
+        width=1000,
+        height=1000,
+    )
+
+    canvas_height, canvas_width = canvas.shape[:2]
+
+    for index, image_path in enumerate(
+        selected_images
+    ):
+
+        grain = prepare_grain(
+            image_path
+        )
+
+        if grain is None:
+            continue
+
+        grain = resize_grain(
+            grain,
+            max_size=100,
+        )
+
+        grain_height, grain_width = (
+            grain.shape[:2]
+        )
+
+        # Normal random placement
+        max_x = canvas_width - grain_width
+        max_y = canvas_height - grain_height
+
+        x = random.randint(0, max_x)
+        y = random.randint(0, max_y)
+
+        if index > 0 and index % 3 == 0:
+
+            x = max(
+                0,
+                x - grain_width // 2
+            )
+
+            y = max(
+                0,
+                y - grain_height // 2
+            )
+
+        canvas[
+            y:y + grain_height,
+            x:x + grain_width
+        ] = grain
+
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    output_path = (
+        OUTPUT_DIR
+        / f"touching_{grain_count}_{image_number}.png"
+    )
+
+    cv.imwrite(
+        str(output_path),
+        canvas,
+    )
+
+    return output_path
+    
 
 if __name__ == "__main__":
 
-    output = generate_image(
+    output = generate_touching_image(
         grain_count=20,
         variety="Arborio",
         image_number=1,
