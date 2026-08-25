@@ -3,38 +3,30 @@ import cv2 as cv
 from src.preprocessing import (
     load_image,
     preprocessing_image,
-    extract_grain,
 )
 
+from src.counter import count_objects
 
-IMAGE_PATH = (
-    "/Users/dhruvsingh/Desktop/open-cv/"
-    "Rice_Image_Dataset/Arborio/Arborio (1).jpg"
-)
+
+IMAGE_PATH = "data/generated/rice_20_1.png"
 
 
 def main():
 
-    # Load image
+    # Load generated image
     image = load_image(IMAGE_PATH)
 
-    # Preprocess
+    # Preprocess image
     binary = preprocessing_image(image)
 
-    # Extract grain
-    grain = extract_grain(
-        image,
-        binary,
-    )
+    # Count objects
+    count = count_objects(binary)
 
-    if grain is None:
-        print("No grain detected.")
-        return
+    print(f"Detected grains: {count}")
 
-    # Display results
-    cv.imshow("Original", image)
+    # Display images
+    cv.imshow("Image", image)
     cv.imshow("Binary", binary)
-    cv.imshow("Extracted Grain", grain)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
