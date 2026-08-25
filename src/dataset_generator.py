@@ -297,12 +297,28 @@ def generate_touching_image(
 
 if __name__ == "__main__":
 
-    output = generate_touching_image(
-        grain_count=20,
-        variety="Arborio",
-        image_number=1,
-    )
+    grain_counts = [5, 10, 20, 30, 50]
 
-    print(
-        f"Generated image: {output}"
-    )
+    for count in grain_counts:
+
+        output = generate_image(
+            grain_count=count,
+            variety="Arborio",
+            image_number=1,
+        )
+
+        print(
+            f"Generated: {output}"
+        )
+
+    for count in grain_counts:
+
+        output = generate_touching_image(
+            grain_count=count,
+            variety="Arborio",
+            image_number=1,
+        )
+
+        print(
+            f"Generated: {output}"
+        )
