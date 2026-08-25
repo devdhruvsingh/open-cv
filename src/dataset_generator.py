@@ -208,7 +208,6 @@ def generate_touching_image(
     variety: str = "Arborio",
     image_number: int = 1,
 ) -> Path:
-#    image generation with overlapping grains 
 
     variety_dir = DATASET_DIR / variety
 
@@ -233,6 +232,14 @@ def generate_touching_image(
 
     canvas_height, canvas_width = canvas.shape[:2]
 
+    columns = 5
+    rows = int(
+        np.ceil(grain_count / columns)
+    )
+
+    cell_width = canvas_width // columns
+    cell_height = canvas_height // rows
+
     for index, image_path in enumerate(
         selected_images
     ):
@@ -253,28 +260,59 @@ def generate_touching_image(
             grain.shape[:2]
         )
 
-        # Normal random placement
-        max_x = canvas_width - grain_width
-        max_y = canvas_height - grain_height
+        column = index % columns
+        row = index // columns
 
-        x = random.randint(0, max_x)
-        y = random.randint(0, max_y)
+        cell_x = column * cell_width
+        cell_y = row * cell_height
 
-        if index > 0 and index % 3 == 0:
+        x = (
+            cell_x
+            + (
+                cell_width - grain_width
+            ) // 2
+        )
 
-            x = max(
-                0,
-                x - grain_width // 2
+        y = (
+            cell_y
+            + (
+                cell_height - grain_height
+            ) // 2
+        )
+
+        if index % 2 == 1:
+
+            x -= int(
+                grain_width * random.uniform(
+                    0.20,
+                    0.35,
+                )
             )
 
-            y = max(
-                0,
-                y - grain_height // 2
+            y += random.randint(
+                -15,
+                15,
             )
+
+        x = max(
+            0,
+            min(
+                x,
+                canvas_width - grain_width,
+            ),
+        )
+
+        y = max(
+            0,
+            min(
+                y,
+                canvas_height - grain_height,
+            ),
+        )
 
         canvas[
             y:y + grain_height,
-            x:x + grain_width
+            x:x + grain_width,
         ] = grain
 
     OUTPUT_DIR.mkdir(
@@ -287,38 +325,69 @@ def generate_touching_image(
         / f"touching_{grain_count}_{image_number}.png"
     )
 
-    cv.imwrite(
+    success = cv.imwrite(
         str(output_path),
         canvas,
     )
 
+    if not success:
+        raise IOError(
+            f"Failed to save image: {output_path}"
+        )
+
+    return output_path
+
+
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    output_path = (
+        OUTPUT_DIR
+        / f"touching_{grain_count}_{image_number}.png"
+    )
+
+    success = cv.imwrite(
+        str(output_path),
+        canvas,
+    )
+
+    if not success:
+        raise IOError(
+            f"Failed to save image: {output_path}"
+        )
+
     return output_path
     
-
 if __name__ == "__main__":
 
     grain_counts = [5, 10, 20, 30, 50]
 
     for count in grain_counts:
 
-        output = generate_image(
-            grain_count=count,
-            variety="Arborio",
-            image_number=1,
-        )
+        for image_number in range(1, 6):
 
-        print(
-            f"Generated: {output}"
-        )
+            output = generate_image(
+                grain_count=count,
+                variety="Arborio",
+                image_number=image_number,
+            )
+
+            print(
+                f"Generated: {output}"
+            )
 
     for count in grain_counts:
 
-        output = generate_touching_image(
-            grain_count=count,
-            variety="Arborio",
-            image_number=1,
-        )
+        for image_number in range(1, 6):
 
-        print(
-            f"Generated: {output}"
-        )
+            output = generate_touching_image(
+                grain_count=count,
+                variety="Arborio",
+                image_number=image_number,
+            )
+
+            print(
+                f"Generated: {output}"
+            )

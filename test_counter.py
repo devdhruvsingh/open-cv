@@ -1,4 +1,4 @@
-import cv2 as cv
+from pathlib import Path
 
 from src.preprocessing import (
     load_image,
@@ -8,27 +8,27 @@ from src.preprocessing import (
 from src.counter import count_grains
 
 
-TEST_CASES = [
-    ("data/generated/rice_5_1.png", 5),
-    ("data/generated/rice_10_1.png", 10),
-    ("data/generated/rice_20_1.png", 20),
-    ("data/generated/rice_30_1.png", 30),
-    ("data/generated/rice_50_1.png", 50),
-]
-
-
 def main():
+
+    image_paths = sorted(
+        Path("data/generated").glob("*.png")
+    )
+
+    total = 0
+    correct = 0
 
     print()
     print("Rice Grain Counter Test")
-    print("-" * 50)
+    print("-" * 70)
 
-    correct = 0
+    for image_path in image_paths:
 
-    for image_path, expected in TEST_CASES:
+        parts = image_path.stem.split("_")
+
+        expected = int(parts[1])
 
         image = load_image(
-            image_path
+            str(image_path)
         )
 
         binary = preprocessing_image(
@@ -49,6 +49,8 @@ def main():
         if detected == expected:
             correct += 1
 
+        total += 1
+
         print(
             f"Expected: {expected:2d} | "
             f"Detected: {detected:2d} | "
@@ -56,12 +58,16 @@ def main():
             f"{image_path}"
         )
 
-    print("-" * 50)
-
     accuracy = (
-        correct / len(TEST_CASES)
-    ) * 100
+        correct / total * 100
+        if total
+        else 0
+    )
 
+    print("-" * 70)
+    print(
+        f"Passed: {correct}/{total}"
+    )
     print(
         f"Test accuracy: {accuracy:.1f}%"
     )
