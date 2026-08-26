@@ -77,6 +77,8 @@ When multiple grains touch each other, the system uses additional segmentation t
 
 ---
 
+# To run the main program use the live counter after installing all the dependencies
+
 # 📁 Project Structure
 
 ```text
